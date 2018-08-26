@@ -86,7 +86,7 @@ func (c *client) do(method, resource string, payload map[string]string, authNeed
 		Url.RawQuery = q.Encode()
 		req, err = http.NewRequest("GET", Url.String(), nil)
 	} else {
-		var postValues url.Values
+		postValues := make(url.Values)
 		for key, value := range payload {
 			postValues.Set(key, value)
 		}
