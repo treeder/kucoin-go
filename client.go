@@ -86,7 +86,13 @@ func (c *client) do(method, resource string, payload map[string]string, authNeed
 		Url.RawQuery = q.Encode()
 		req, err = http.NewRequest("GET", Url.String(), nil)
 	} else {
-		var postValues url.Values
+		// don't necessarily need this `q` here, but we need it for the signature below
+		q := Url.Query()
+		for key, value := range payload {
+			q.Set(key, value)
+		}
+		Url.RawQuery = q.Encode()
+		postValues := make(url.Values)
 		for key, value := range payload {
 			postValues.Set(key, value)
 		}
@@ -130,6 +136,8 @@ func (c *client) do(method, resource string, payload map[string]string, authNeed
 	if err != nil {
 		return nil, err
 	}
+	// fmt.Println("status code", resp.StatusCode)
+	// fmt.Println("RESPONSE:", string(data))
 	if resp.StatusCode != 200 {
 		err = errors.New(resp.Status)
 	}
@@ -145,6 +153,7 @@ func computeHmac256(message, secret string) string {
 
 func (c *client) sign(path, queryString string, nonce int64) (signature string) {
 	strForSign := fmt.Sprintf("%s/%v/%s", path, nonce, queryString)
+	// fmt.Println("SIGN STRING: ", strForSign)
 	signatureStr := b64.StdEncoding.EncodeToString([]byte(strForSign))
 	signature = computeHmac256(signatureStr, c.apiSecret)
 	return

@@ -356,6 +356,7 @@ func (b *Kucoin) CreateOrder(symbol, side string, price, amount float64) (orderO
 	if err != nil {
 		return
 	}
+
 	var response interface{}
 	if err = json.Unmarshal(r, &response); err != nil {
 		return
@@ -363,8 +364,15 @@ func (b *Kucoin) CreateOrder(symbol, side string, price, amount float64) (orderO
 	if err = handleErr(response); err != nil {
 		return
 	}
+
 	var rawRes rawOrder
 	err = json.Unmarshal(r, &rawRes)
+	if err != nil {
+		return "", err
+	}
+	if !rawRes.Success {
+		return "", fmt.Errorf("error creating order: %v", rawRes.Msg)
+	}
 	orderOid = rawRes.Data.OrderOid
 	return
 }
